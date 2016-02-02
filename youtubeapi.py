@@ -53,7 +53,7 @@ class YouTube():
 		channels_response = self.api.channels().list(
 			id = id,
 			part = "snippet",
-			fields = 'items(snippet(title))'
+			fields = 'items(id,snippet(title))'
 		).execute()
 		return self.channel_from_response(channels_response)
 
@@ -61,7 +61,7 @@ class YouTube():
 		channels_response = self.api.channels().list(
 			forUsername = username,
 			part = "snippet",
-			fields = 'items(snippet(title))'
+			fields = 'items(id,snippet(title))'
 		).execute()
 		channel = self.channel_from_response(channels_response)
 		if channel is not None:
@@ -104,6 +104,6 @@ class YouTube():
 		for channel in channels_response["items"]:
 			uploads_list_id = channel["contentDetails"]["relatedPlaylists"]["uploads"]
 			last_checked = dateutil.parser.parse(channels[channel['id']])
-			last_checked = last_checked.replace(tzinfo = timezone.utc)			
+			last_checked = last_checked.replace(tzinfo = timezone.utc)
 			for upload in self.get_uploads_playlist(uploads_list_id, last_checked):
 				yield upload
