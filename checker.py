@@ -78,7 +78,7 @@ def main():
 				video_url = 'https://youtube.com/watch?v=%s' % (upload['id'],)
 				data.append([channel_item['title'], upload['title'], upload['published_at'], video_url])
 
-			pretty_print(['Channel', 'Title', 'Published At', 'Link'], data)
+		pretty_print(['Channel', 'Title', 'Published At', 'Link'], data)
 
 if __name__ == '__main__':
 	main()
