@@ -2,31 +2,29 @@
 
 import sys
 import argparse
-import dateutil.parser
 
-from datetime import datetime, timezone
 from youtubeapi import YouTube
 from datastore import DataStore
 
-def pretty_print(header, data):
+def pretty_print(headers, data):
 	if (len(data) == 0):
 		return
 
-	separator = []
-	for word in header:
-		separator.append('-' * len(word))
+	separators = []
+	for word in headers:
+		separators.append('-' * len(word))
 
-	output = [header, separator] + data
+	output = [headers, separators] + data
 
-	max_lens = [0] * len(header)
+	col_widths = [0] * len(headers)
 	for row in output:
 		for idx, column in enumerate(row):
-			if len(column) > max_lens[idx]:
-				max_lens[idx] = len(column)
+			if len(column) > col_widths[idx]:
+				col_widths[idx] = len(column)
 
 	for row in output:
 		for idx, column in enumerate(row):
-			print("".join(column.ljust(max_lens[idx])), end = ' ' * 2)
+			print("".join(column.ljust(col_widths[idx])), end = ' ' * 2)
 		print()
 
 def get_parser():
@@ -68,17 +66,19 @@ def main():
 			channels = store.get_channels()
 
 		data = []
+		to_check = dict()
 		for channel_item in channels:
-			last_checked = dateutil.parser.parse(channel_item['last_checked'])
-			last_checked = last_checked.replace(tzinfo = timezone.utc)
-			uploads = youtube.get_uploads_by_id(channel_item['id'], last_checked)
-			store.update_last_checked(channel_item['id'])
+			to_check[channel_item['id']] = channel_item['last_checked']
 
-			for upload in uploads:
-				video_url = 'https://youtube.com/watch?v=%s' % (upload['id'],)
-				data.append([channel_item['title'], upload['title'], upload['published_at'], video_url])
+		uploads = youtube.get_uploads(to_check)
+		for upload in uploads:
+			video_url = 'https://youtube.com/watch?v=%s' % (upload['id'],)
+			data.append([channel_item['title'], upload['title'], upload['published_at'], video_url])
 
 		pretty_print(['Channel', 'Title', 'Published At', 'Link'], data)
+
+		for channel_id in to_check.keys():
+			store.update_last_checked(channel_id)
 
 if __name__ == '__main__':
 	main()

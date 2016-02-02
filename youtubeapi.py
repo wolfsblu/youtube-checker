@@ -3,7 +3,7 @@ import os
 import sys
 import dateutil.parser
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from apiclient.discovery import build
 from oauth2client.client import flow_from_clientsecrets
@@ -51,62 +51,59 @@ class YouTube():
 
 	def get_channel_by_id(self, id):
 		channels_response = self.api.channels().list(
+			id = id,
 			part = "snippet",
-			id = id
+			fields = 'items(snippet(title))'
 		).execute()
 		return self.channel_from_response(channels_response)
 
 	def get_channel_by_username(self, username):
 		channels_response = self.api.channels().list(
+			forUsername = username,
 			part = "snippet",
-			forUsername = username
+			fields = 'items(snippet(title))'
 		).execute()
 		channel = self.channel_from_response(channels_response)
 		if channel is not None:
 			channel['username'] = username
 		return channel
 
-	def get_uploads(self, channels, olderThan):
-		for channel in channels:
-			uploads_list_id = channel["contentDetails"]["relatedPlaylists"]["uploads"]
+	def get_uploads_playlist(self, uploads_list_id, last_checked):
+		playlistitems_request = self.api.playlistItems().list(
+			playlistId = uploads_list_id,
+			part = "snippet",
+			fields = 'items(id,snippet(title,publishedAt,resourceId(videoId)))',
+			maxResults = 50
+		)
 
-			playlistitems_request = self.api.playlistItems().list(
-				playlistId = uploads_list_id,
-				part = "snippet",
-				maxResults = 50
+		while playlistitems_request:
+			playlistitems_response = playlistitems_request.execute()
+
+			for playlist_item in playlistitems_response["items"]:
+				publishedAt = dateutil.parser.parse(playlist_item['snippet']['publishedAt'])
+				if (publishedAt > last_checked):
+					video = dict()
+					video['id'] = playlist_item["snippet"]["resourceId"]["videoId"]
+					video['published_at'] = playlist_item["snippet"]["publishedAt"]
+					video['title'] = playlist_item["snippet"]["title"]
+					yield video
+				else:
+					return
+
+			playlistitems_request = self.api.playlistItems().list_next(
+				playlistitems_request, playlistitems_response
 			)
 
-			while playlistitems_request:
-				playlistitems_response = playlistitems_request.execute()
-
-				for playlist_item in playlistitems_response["items"]:
-					publishedAt = dateutil.parser.parse(playlist_item['snippet']['publishedAt'])
-					if (publishedAt > olderThan):
-						video = dict()
-						video['id'] = playlist_item["snippet"]["resourceId"]["videoId"]
-						video['published_at'] = playlist_item["snippet"]["publishedAt"]
-						video['title'] = playlist_item["snippet"]["title"]
-						yield video
-					else:
-						return
-
-				playlistitems_request = self.api.playlistItems().list_next(
-					playlistitems_request, playlistitems_response
-				)
-
-	def get_uploads_by_id(self, id, olderThan):
+	def get_uploads(self, channels):
 		channels_response = self.api.channels().list(
+			id = ",".join(channels.keys()),
 			part = "contentDetails",
-			id = id
+			fields = "items(id,contentDetails(relatedPlaylists(uploads)))"
 		).execute()
-		for video in self.get_uploads(channels_response["items"], olderThan):
-			yield video
 
-	def get_uploads_by_user(self, user, olderThan):
-		channels_response = self.api.channels().list(
-			part = "contentDetails",
-			#id="UCMNtK7yPbnSbjbyQo7svyRA"
-			forUsername = user
-		).execute()
-		for video in self.get_uploads(channels_response["items"], olderThan):
-			yield video
+		for channel in channels_response["items"]:
+			uploads_list_id = channel["contentDetails"]["relatedPlaylists"]["uploads"]
+			last_checked = dateutil.parser.parse(channels[channel['id']])
+			last_checked = last_checked.replace(tzinfo = timezone.utc)			
+			for upload in self.get_uploads_playlist(uploads_list_id, last_checked):
+				yield upload
