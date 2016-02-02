@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS channel(
+	id TEXT PRIMARY KEY,
+	username TEXT NULL UNIQUE,
+	title TEXT NOT NULL UNIQUE,
+	added_on TEXT NOT NULL,
+	last_checked TEXT NOT NULL
+);
