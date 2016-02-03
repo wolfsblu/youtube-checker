@@ -73,7 +73,7 @@ def main():
 		uploads = youtube.get_uploads(to_check)
 		for upload in uploads:
 			video_url = 'https://youtube.com/watch?v=%s' % (upload['id'],)
-			data.append([channel_item['title'], upload['title'], upload['published_at'], video_url])
+			data.append([upload['channel_title'], upload['title'], upload['published_at'], video_url])
 
 		pretty_print(['Channel', 'Title', 'Published At', 'Link'], data)
 

@@ -97,8 +97,8 @@ class YouTube():
 	def get_uploads(self, channels):
 		channels_response = self.api.channels().list(
 			id = ",".join(channels.keys()),
-			part = "contentDetails",
-			fields = "items(id,contentDetails(relatedPlaylists(uploads)))"
+			part = "contentDetails,snippet",
+			fields = "items(id,contentDetails(relatedPlaylists(uploads)),snippet(title))"
 		).execute()
 
 		for channel in channels_response["items"]:
@@ -106,4 +106,5 @@ class YouTube():
 			last_checked = dateutil.parser.parse(channels[channel['id']])
 			last_checked = last_checked.replace(tzinfo = timezone.utc)
 			for upload in self.get_uploads_playlist(uploads_list_id, last_checked):
+				upload['channel_title'] = channel['snippet']['title']
 				yield upload
