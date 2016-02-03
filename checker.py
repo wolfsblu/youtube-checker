@@ -2,6 +2,7 @@
 
 import sys
 import argparse
+import arrow
 
 from youtubeapi import YouTube
 from datastore import DataStore
@@ -55,9 +56,14 @@ def main():
 	elif args.action == 'list':
 		data = []
 		for item in store.get_channels():
-			data.append([item['id'], item['title'], item['added_on'], item['last_checked']])
+			data.append([
+				item['id'],
+				item['title'],
+				arrow.get(item['added_on']).humanize(),
+				arrow.get(item['last_checked']).humanize()
+			])
 
-		pretty_print(['ID', 'Title', 'Added On', 'Last Checked'], data)
+		pretty_print(['ID', 'Title', 'Added', 'Last Checked'], data)
 	elif args.action == 'check':
 		channels = []
 		if channel is not None:
@@ -72,10 +78,14 @@ def main():
 
 		uploads = youtube.get_uploads(to_check)
 		for upload in uploads:
-			video_url = 'https://youtube.com/watch?v=%s' % (upload['id'],)
-			data.append([upload['channel_title'], upload['title'], upload['published_at'], video_url])
+			data.append([
+				upload['channel_title'],
+				upload['title'],
+				arrow.get(upload['published_at']).humanize(),
+				'https://youtube.com/watch?v=%s' % (upload['id'], )
+			])
 
-		pretty_print(['Channel', 'Title', 'Published At', 'Link'], data)
+		pretty_print(['Channel', 'Title', 'Published', 'Link'], data)
 
 		for channel_id in to_check.keys():
 			store.update_last_checked(channel_id)
