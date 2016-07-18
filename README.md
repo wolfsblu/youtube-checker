@@ -14,7 +14,7 @@ A handy tool for users who prefer the terminal.
    1. Go to [Credentials](https://console.developers.google.com/apis/credentials)
    1. Configure the OAuth consent screen and create *OAuth client ID* credentials 
    1. Use Application Type *Other* and provide a client name (e.g. *Python*)
-   1. Confirm and download the generated JSON
+   1. Confirm and download the generated credentials as JSON file
 1. Store the file in the application folder as *client_secrets.json*
 1. Launch the program using `./checker.py`
 1. A browser window should open asking for confirmation
