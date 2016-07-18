@@ -13,7 +13,7 @@ from oauth2client.tools import argparser, run_flow
 class YouTube():
 	MISSING_CLIENT_SECRETS_MESSAGE = """
 	WARNING: Please configure OAuth 2.0
-	To make this sample run you will need to provide a client_secrets.json file
+	You will need to provide a client_secrets.json file
 	"""
 
 	CLIENT_SECRETS_FILE = "client_secrets.json"
