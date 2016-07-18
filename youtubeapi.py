@@ -23,6 +23,11 @@ class YouTube():
 	YOUTUBE_API_VERSION = "v3"
 
 	def __init__(self):
+		"""Returns an instance of a wrapper for the YouTube API.
+
+		Uses a file called client_secrets.json to initialize access to the YouTube API
+		using the 'readonly' scope.
+		"""
 		flow = flow_from_clientsecrets(self.CLIENT_SECRETS_FILE,
 			message = self.MISSING_CLIENT_SECRETS_MESSAGE,
 			scope = self.YOUTUBE_READONLY_SCOPE)
@@ -38,6 +43,7 @@ class YouTube():
 			http = self.credentials.authorize(httplib2.Http()))
 
 	def channel_from_response(self, response):
+		"""Transforms a YouTube API response into a channel object"""
 		for channel in response['items']:
 			result = dict()
 			result['id'] = channel['id']
@@ -50,6 +56,11 @@ class YouTube():
 
 
 	def get_channel_by_id(self, id):
+		"""Queries YouTube for a channel using the specified id
+
+		Args:
+			id (str): The channel ID to search for
+		"""
 		channels_response = self.api.channels().list(
 			id = id,
 			part = "snippet",
@@ -58,6 +69,11 @@ class YouTube():
 		return self.channel_from_response(channels_response)
 
 	def get_channel_by_username(self, username):
+		"""Queries YouTube for a channel using the specified username
+
+		Args:
+			username (str): The username to search for
+		"""
 		channels_response = self.api.channels().list(
 			forUsername = username,
 			part = "snippet",
@@ -69,6 +85,13 @@ class YouTube():
 		return channel
 
 	def get_uploads_playlist(self, uploads_list_id, last_checked):
+		"""Retrieves uploads using the specified playlist ID which 
+		were have been added since the last check.
+
+		Args:
+			uploads_list_id (str): The ID of the uploads playlist
+			last_checked (datetime.datetime): When the channel was last checked
+		"""
 		playlistitems_request = self.api.playlistItems().list(
 			playlistId = uploads_list_id,
 			part = "snippet",
@@ -95,6 +118,11 @@ class YouTube():
 			)
 
 	def get_uploads(self, channels):
+		"""Retrieves new uploads for the specified channels
+
+		Args:
+			channels(dict): The channels to check (format channel_id => last_checked)
+		"""
 		channels_response = self.api.channels().list(
 			id = ",".join(channels.keys()),
 			part = "contentDetails,snippet",

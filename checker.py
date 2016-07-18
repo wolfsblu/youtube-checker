@@ -8,6 +8,12 @@ from youtubeapi import YouTube
 from datastore import DataStore
 
 def pretty_print(headers, data):
+	"""Print the provided header and data in a visually pleasing manner
+
+	Args:
+		headers (list of str): The headers to print 
+		data (list of list of str): The data rows
+	"""
 	if (len(data) == 0):
 		return
 
@@ -37,6 +43,11 @@ def get_parser():
 	return parser
 
 def main():
+	"""Parse the command line arguments, expecting one of the following formats:
+		-) (-i ChannelID | -u Username) (add | check | remove)
+		-) check | list
+	and perform the appropriate action
+	"""
 	parser = get_parser()
 	args = parser.parse_args()
 
@@ -65,6 +76,8 @@ def main():
 
 		pretty_print(['ID', 'Title', 'Added', 'Last Checked'], data)
 	elif args.action == 'check':
+		# If the user passed a specific channel, check for new uploads
+		# otherwhise check for uploads from every previously added channel
 		channels = []
 		if channel is not None:
 			channels.append(store.get_channel_by_id(channel['id']))
