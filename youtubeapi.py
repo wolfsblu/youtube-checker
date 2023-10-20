@@ -128,7 +128,7 @@ class YouTube():
 			part = "contentDetails,snippet",
 			fields = "items(id,contentDetails(relatedPlaylists(uploads)),snippet(title))"
 		).execute()
-
+		if "items" not in channels_response: return
 		for channel in channels_response["items"]:
 			uploads_list_id = channel["contentDetails"]["relatedPlaylists"]["uploads"]
 			last_checked = dateutil.parser.parse(channels[channel['id']])
